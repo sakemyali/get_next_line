@@ -6,63 +6,83 @@
 /*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/01 16:17:50 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/12 09:57:09 by mosakura         ###   ########.fr       */
+/*   Updated: 2025/11/19 19:07:30 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-ssize_t	read_file(int fd, char *buffer)
+char	*ft_checkread(int fd, char *buffer, char *line, int *b)
 {
-	ssize_t	bytes;
+	ssize_t		r;
+	ssize_t		nl;
+	char		*sub;
 
-	bytes = read(fd, buffer, BUFFER_SIZE);
-	return (bytes);
-}
-
-ssize_t	check_if_end(char *buffer, ssize_t bytes)
-{
-	ssize_t	i;
-
-	i = 0;
-	if (bytes < BUFFER_SIZE)
-		return (i);
-	while (buffer[i])
+	r = read(fd, buffer, BUFFER_SIZE);
+	nl = ft_checknl(buffer);
+	if (r <= 0 && line[0] == '\0')
 	{
-		if (buffer[i] == '\n')
-			return (i);
+		free(line);
+		return (NULL);
 	}
-	return (-1);
+	else
+	{
+		if (r < BUFFER_SIZE && nl < 0)
+			*b = 1;
+		if (nl > 0)
+		{
+			sub = ft_substr(buffer, 0, (nl + 1));
+			if (sub == NULL)
+				return (NULL);
+			return (ft_strjoin(line, sub, 1, buffer));
+		}
+		else
+			return (ft_strjoin(line, buffer, 0, buffer));
+	}
 }
 
-void	*add_buffer_list(t_node *fnode, int fd)
+void	ft_cleanbuffer(char *buffer)
 {
-	t_list	*list;
-	ssize_t	i;
-	char	*buffer;
-	ssize_t	bytes;
-	int		lst_size;
+	ssize_t	nl;
+	size_t	j;
 
-	buffer = (char *)malloc(BUFFER_SIZE);
-	bytes = read_file(fd, buffer);
-	ft_lstadd_back(fnode->flist, ft_lstnew(buffer, fd));
-	i = check_if_end(buffer, bytes);
-	if (i > 0)
+	nl = 0;
+	j = 0;
+	while (buffer[nl] && buffer[nl] != '\n')
+		nl++;
+	while (nl + j < BUFFER_SIZE)
 	{
-		lst_size = ft_lstsize(fnode->flist);
-		while (lst_size > 0)
-		{
-
-		}
+		buffer[j] = buffer[nl + j + 1];
+		j++;
+	}
+	while (j < BUFFER_SIZE)
+	{
+		buffer[j] = 0;
+		j++;
 	}
 }
 
 char	*get_next_line(int fd)
 {
-	static t_node	**first_node;
-	ssize_t			total;
-	ssize_t			bytes;
+	static char		buffer[1024][BUFFER_SIZE + 1];
+	char			*line;
+	int				b;
+	ssize_t			nl;
 
-	if (fd < 0)
+	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, buffer[fd], 0) < 0)
 		return (NULL);
+	line = (char *)malloc(sizeof(char) * 1);
+	if (!line)
+		return (NULL);
+	line[0] = '\0';
+	nl = ft_checknl(buffer[fd]);
+	if (nl > 0)
+		line = ft_strjoin(line, ft_substr(buffer[fd], 0, (nl + 1)), 1,
+				buffer[fd]);
+	else if (buffer[fd][0] != '\0')
+		line = ft_strjoin(line, buffer[fd], 0, buffer[fd]);
+	b = 0;
+	while (b == 0 && line != NULL && ft_checknl(line) < 0)
+		line = ft_checkread(fd, buffer[fd], line, &b);
+	return (line);
 }

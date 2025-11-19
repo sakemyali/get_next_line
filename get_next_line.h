@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/01 16:17:53 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/12 08:58:57 by mosakura         ###   ########.fr       */
+/*   Created: 2025/11/18 15:49:08 by mosakura          #+#    #+#             */
+/*   Updated: 2025/11/19 19:07:58 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,36 +17,18 @@
 #  define BUFFER_SIZE 42
 # endif
 
-# include <stdlib.h> //malloc, free
-# include <unistd.h> //read
-# include <limits.h> //SIZE_MAX
-# include <stdint.h> // SIZE_MAX
+# include <limits.h>
+# include <stddef.h>
+# include <stdlib.h>
+# include <unistd.h>
 
-# define CHUNK_SIZE 50
-
-typedef struct s_list
-{
-	int				my_fd;
-	struct s_list	*other_fd;
-	void			*content;
-	struct s_list	*next;
-}	t_list;
-
-typedef struct fnode
-{
-	int				my_fd;
-	struct fnode	*other_fd;
-	struct s_list	**flist;
-}	t_node;
-
-char	*get_next_line(int fd);
-t_list	*ft_lstnew(void *content, int fd);
-void	ft_lstiter(t_list *lst, void (*f)(void *));
-void	ft_lstadd_back(t_list **lst, t_list *new);
-void	ft_lstdelone(t_list *lst, void (*del)(void *));
-void	ft_lstclear(t_list **lst, void (*del)(void *));
-int		check_if_node(int fd, t_node *fnode);
-int		ft_lstsize(t_list *lst);
-
+char		*get_next_line(int fd);
+ssize_t		ft_checknl(char *str);
+char		*ft_checkread(int fd, char *buffer, char *line, int *b);
+void		ft_cleanbuffer(char *buffer);
+char		*ft_strjoin(char *s1, char *s2, int b, char *buffer);
+char		*ft_substr(char *s, size_t start, size_t len);
+void		ft_strcpy(char *dst, char *src);
+size_t		ft_strlen(char *s);
 
 #endif

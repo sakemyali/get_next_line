@@ -6,92 +6,76 @@
 /*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/01 16:17:48 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/12 05:35:07 by mosakura         ###   ########.fr       */
+/*   Updated: 2025/11/19 19:47:00 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-t_list	*ft_lstnew(void *content, int fd)
+ssize_t	ft_checknl(char *str)
 {
-	t_list	*list;
+	ssize_t	i;
 
-	list = (t_list *)malloc(sizeof(t_list));
-	if (!list)
-		return (NULL);
-	list->content = content;
-	list->my_fd = fd;
-	list->next = NULL;
-	list->other_fd = NULL;
-	return (list);
-}
-
-void	ft_lstiter(t_list *lst, void (*f)(void *))
-{
-	if (!lst || !f)
-		return ;
-	while (lst)
+	i = 0;
+	while (str[i])
 	{
-		f(lst->content);
-		lst = lst->next;
-	}
-}
-
-void	ft_lstadd_back(t_list **lst, t_list *new)
-{
-	t_list	*list;
-
-	if (!lst || !new)
-		return ;
-	if (!*lst)
-	{
-		*lst = new;
-		return ;
-	}
-	list = *lst;
-	while (list->next)
-		list = list->next;
-	list->next = new;
-}
-
-void	ft_lstdelone(t_list *lst, void (*del)(void *))
-{
-	if (!lst || !del)
-		return ;
-	del(lst->content);
-	free(lst);
-}
-
-void	ft_lstclear(t_list **lst, void (*del)(void *))
-{
-	t_list	*nlist;
-	t_list	*list;
-
-	if (!lst || !del)
-		return ;
-	list = *lst;
-	while (list)
-	{
-		nlist = list->next;
-		ft_lstdelone(list, del);
-		list = nlist;
-	}
-	*lst = NULL;
-	list = NULL;
-	nlist = NULL;
-}
-
-int	ft_lstsize(t_list *lst)
-{
-	int	i;
-
-	if (!lst)
-		return (0);
-	i = 1;
-	while (lst->next)
-	{
-		lst = lst->next;
+		if (str[i] == '\n')
+			return (i);
 		i++;
 	}
+	return (-1);
+}
+
+size_t	ft_strlen(char *s)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i])
+		i++;
 	return (i);
+}
+
+char	*ft_strjoin(char *s1, char *s2, int b, char *buffer)
+{
+	size_t		i;
+	size_t		j;
+	char		*strmalloc;
+
+	i = 0;
+	j = 0;
+	strmalloc = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2)) + 1);
+	if (strmalloc == NULL)
+		return (NULL);
+	while (s1[i])
+	{
+		strmalloc[i] = s1[i];
+		i++;
+	}
+	while (s2[j])
+	{
+		strmalloc[i + j] = s2[j];
+		j++;
+	}
+	strmalloc[i + j] = '\0';
+	free(s1);
+	if (b == 1)
+		free(s2);
+	ft_cleanbuffer(buffer);
+	return (strmalloc);
+}
+
+char	*ft_substr(char *s, size_t start, size_t len)
+{
+	size_t		i;
+	char		*strmalloc;
+
+	i = 0;
+	strmalloc = (char *)malloc((sizeof(char) * len) + 1);
+	if (strmalloc == NULL)
+		return (NULL);
+	while (s[i] && i < len)
+		strmalloc[i++] = s[start++];
+	strmalloc[i] = '\0';
+	return (strmalloc);
 }

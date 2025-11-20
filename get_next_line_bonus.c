@@ -6,83 +6,103 @@
 /*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 04:15:46 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/19 19:09:10 by mosakura         ###   ########.fr       */
+/*   Updated: 2025/11/20 17:22:47 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-char	*ft_checkread(int fd, char *buffer, char *line, int *b)
+static char	*read_until(int fd, int *end_flag)
 {
-	ssize_t		r;
-	ssize_t		nl;
-	char		*sub;
+	ssize_t		bytes;
+	char		*temp_buffer;
 
-	r = read(fd, buffer, BUFFER_SIZE);
-	nl = ft_checknl(buffer);
-	if (r <= 0 && line[0] == '\0')
-	{
-		free(line);
-		return (NULL);
-	}
-	else
-	{
-		if (r < BUFFER_SIZE && nl < 0)
-			*b = 1;
-		if (nl > 0)
-		{
-			sub = ft_substr(buffer, 0, (nl + 1));
-			if (sub == NULL)
-				return (NULL);
-			return (ft_strjoin(line, sub, 1, buffer));
-		}
-		else
-			return (ft_strjoin(line, buffer, 0, buffer));
-	}
+	temp_buffer = (char *)malloc(BUFFER_SIZE + 1);
+	if (!temp_buffer)
+		return (*end_flag = -1, NULL);
+	bytes = read(fd, temp_buffer, BUFFER_SIZE);
+	if (bytes == 0)
+		return (free(temp_buffer), *end_flag = 1, NULL);
+	else if (bytes < 0)
+		return (free(temp_buffer), *end_flag = -1, NULL);
+	temp_buffer[bytes] = '\0';
+	return (temp_buffer);
 }
 
-void	ft_cleanbuffer(char *buffer)
+static void	clean_buffer(char *buffer, char *line)
 {
-	ssize_t	nl;
-	size_t	j;
+	ssize_t	newline_idx;
+	size_t	i;
 
-	nl = 0;
-	j = 0;
-	while (buffer[nl] && buffer[nl] != '\n')
-		nl++;
-	while (nl + j < BUFFER_SIZE)
+	newline_idx = get_newline(line);
+	if (newline_idx < 0)
 	{
-		buffer[j] = buffer[nl + j + 1];
-		j++;
+		buffer[0] = '\0';
+		return ;
 	}
-	while (j < BUFFER_SIZE)
+	i = 0;
+	while (line[newline_idx + i + 1] && i < BUFFER_SIZE)
 	{
-		buffer[j] = 0;
-		j++;
+		buffer[i] = line[newline_idx + i + 1];
+		i++;
 	}
+	buffer[i] = '\0';
+}
+
+static char	*read_line(int fd, char *initial, int *end_flag)
+{
+	char	*line;
+	char	*chunk;
+
+	line = initial;
+	while (*end_flag == 0 && line != NULL && get_newline(line) < 0)
+	{
+		chunk = read_until(fd, end_flag);
+		line = ft_strjoin(line, chunk);
+		if (!line && *end_flag != 1)
+			*end_flag = -1;
+	}
+	return (line);
+}
+
+static char	*extract_line(char *buffer, char *line)
+{
+	ssize_t	newline_idx;
+	char	*result;
+
+	result = line;
+	newline_idx = get_newline(line);
+	if (newline_idx >= 0)
+	{
+		clean_buffer(buffer, line);
+		result = ft_substr(line, 0, (size_t)newline_idx + 1);
+		free(line);
+	}
+	return (result);
 }
 
 char	*get_next_line(int fd)
 {
-	static char		buffer[1024][BUFFER_SIZE + 1];
-	char			*line;
-	int				b;
-	ssize_t			nl;
+	static char	buffer[1024][BUFFER_SIZE + 1];
+	char		*line;
+	int			end_flag;
 
-	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, buffer[fd], 0) < 0)
+	if (BUFFER_SIZE <= 0 || fd < 0 || fd >= 1024)
 		return (NULL);
-	line = (char *)malloc(sizeof(char) * 1);
-	if (!line)
+	if (read(fd, NULL, 0) < 0)
+	{
+		buffer[fd][0] = '\0';
 		return (NULL);
-	line[0] = '\0';
-	nl = ft_checknl(buffer[fd]);
-	if (nl > 0)
-		line = ft_strjoin(line, ft_substr(buffer[fd], 0, (nl + 1)), 1,
-				buffer[fd]);
-	else if (buffer[fd][0] != '\0')
-		line = ft_strjoin(line, buffer[fd], 0, buffer[fd]);
-	b = 0;
-	while (b == 0 && line != NULL && ft_checknl(line) < 0)
-		line = ft_checkread(fd, buffer[fd], line, &b);
-	return (line);
+	}
+	end_flag = 0;
+	if (!buffer[fd][0])
+		line = read_until(fd, &end_flag);
+	else
+		line = ft_strdup(buffer[fd]);
+	line = read_line(fd, line, &end_flag);
+	if (!line || end_flag < 0)
+		return (buffer[fd][0] = '\0', free(line), NULL);
+	if (end_flag == 1 && (!line || !line[0]))
+		return (buffer[fd][0] = '\0', free(line), NULL);
+	return (extract_line(buffer[fd], line));
 }

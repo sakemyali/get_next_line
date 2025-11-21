@@ -6,99 +6,95 @@
 /*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/12 04:15:41 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/21 20:39:04 by mosakura         ###   ########.fr       */
+/*   Updated: 2025/11/21 21:22:10 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-char	*strjoin_and_free(char *s1, char *s2)
+char	*free_strjoin(char *s1, char *s2)
 {
-	char	*joined;
+	char	*res;
 
-	joined = ft_strjoin(s1, s2);
-	free(s1);
-	return (joined);
+	res = ft_strjoin(s1, s2);
+	return (free(s1), res);
 }
 
 size_t	ft_strlen(const char *s)
 {
-	size_t	count;
+	size_t	i;
 
-	count = 0;
-	while (s[count])
-		count++;
-	return (count);
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
 }
 
-char	*ft_strdup_gnl(const char *src)
+char	*ft_strdup(const char *str)
 {
-	char	*dup;
+	char	*res;
 	size_t	i;
 	size_t	len;
 
-	if (!src)
+	if (!str)
 	{
-		dup = malloc(1);
-		if (!dup)
+		res = (char *)malloc(1);
+		if (!res)
 			return (NULL);
-		dup[0] = '\0';
-		return (dup);
+		return (res[0] = '\0', res);
 	}
-	len = ft_strlen(src);
-	dup = malloc(len + 1);
-	if (!dup)
+	len = ft_strlen(str);
+	res = (char *)malloc(len + 1);
+	if (!res)
 		return (NULL);
 	i = 0;
 	while (i < len)
 	{
-		dup[i] = src[i];
+		res[i] = str[i];
 		i++;
 	}
-	dup[i] = '\0';
-	return (dup);
+	return (res[i] = '\0', res);
 }
 
 char	*ft_strjoin(const char *s1, const char *s2)
 {
-	char	*dst;
+	char	*res;
 	size_t	i;
 	size_t	j;
 
 	if (!s1)
-		return (ft_strdup_gnl(s2));
+		return (ft_strdup(s2));
 	if (!s2)
-		return (ft_strdup_gnl(s1));
-	dst = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
-	if (!dst)
+		return (ft_strdup(s1));
+	res = (char *)malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
+	if (!res)
 		return (NULL);
 	i = 0;
 	while (s1[i])
 	{
-		dst[i] = s1[i];
+		res[i] = s1[i];
 		i++;
 	}
 	j = 0;
 	while (s2[j])
-		dst[i++] = s2[j++];
-	dst[i] = '\0';
-	return (dst);
+		res[i++] = s2[j++];
+	return (res[i] = '\0', res);
 }
 
 char	*ft_strchr(const char *str, int c)
 {
-	char	ch;
+	char	cchar;
 
 	if (!str)
 		return (NULL);
-	ch = (char)c;
+	cchar = (char)c;
 	while (*str)
 	{
-		if (*str == ch)
+		if (*str == cchar)
 			return ((char *)str);
 		str++;
 	}
-	if (ch == '\0')
+	if (cchar == '\0')
 		return ((char *)str);
 	return (NULL);
 }

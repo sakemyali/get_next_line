@@ -3,126 +3,114 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mvrm <mvrm@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/01 16:17:50 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/21 15:54:14 by mvrm             ###   ########.fr       */
+/*   Updated: 2025/11/21 21:20:05 by mosakura         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static char	*read_chunk(int fd, char *storage, char *buffer)
+static char	*read_until(int fd, char *buffer, char *temp_buffer)
 {
-	ssize_t	bytes_read;
+	ssize_t	bytes;
 
-	bytes_read = 1;
-	while (bytes_read > 0)
+	bytes = 1;
+	while (bytes > 0)
 	{
-		bytes_read = read(fd, buffer, BUFFER_SIZE);
-		if (bytes_read < 0)
-		{
-			free(storage);
-			return (NULL);
-		}
-		if (bytes_read == 0)
+		bytes = read(fd, temp_buffer, BUFFER_SIZE);
+		if (bytes < 0)
+			return (free(buffer), NULL);
+		if (bytes == 0)
 			break ;
-		buffer[bytes_read] = '\0';
-		storage = strjoin_and_free(storage, buffer);
-		if (!storage)
+		temp_buffer[bytes] = '\0';
+		buffer = free_strjoin(buffer, temp_buffer);
+		if (!buffer)
 			return (NULL);
-		if (ft_strchr(storage, '\n'))
+		if (ft_strchr(buffer, '\n'))
 			break ;
 	}
-	return (storage);
+	return (buffer);
 }
 
-static char	*fill_storage(int fd, char *storage)
+static char	*read_line(int fd, char *storage)
 {
-	char	*buffer;
-	char	*tmp;
+	char	*temp_buffer;
+	char	*res;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
 	if (ft_strchr(storage, '\n'))
 		return (storage);
-	buffer = malloc(BUFFER_SIZE + 1);
-	if (!buffer)
-	{
-		free(storage);
-		return (NULL);
-	}
-	tmp = read_chunk(fd, storage, buffer);
-	free(buffer);
-	return (tmp);
+	temp_buffer = malloc(BUFFER_SIZE + 1);
+	if (!temp_buffer)
+		return (free(storage), NULL);
+	res = read_until(fd, storage, temp_buffer);
+	return (free(temp_buffer), res);
 }
 
-static char	*extract_line(const char *storage)
+static char	*extract_line(const char *buffer)
 {
-	char	*newline_loc;
+	char	*newline_addr;
 	size_t	len;
-	char	*out;
+	char	*res;
 	size_t	i;
 
-	if (!storage)
+	if (!buffer)
 		return (NULL);
-	newline_loc = ft_strchr(storage, '\n');
-	if (!newline_loc)
-		len = ft_strlen(storage);
+	newline_addr = ft_strchr(buffer, '\n');
+	if (!newline_addr)
+		len = ft_strlen(buffer);
 	else
-		len = (size_t)(newline_loc - storage) + 1;
-	out = malloc(len + 1);
-	if (!out)
+		len = (size_t)(newline_addr - buffer) + 1;
+	res = malloc(len + 1);
+	if (!res)
 		return (NULL);
 	i = 0;
 	while (i < len)
 	{
-		out[i] = storage[i];
+		res[i] = buffer[i];
 		i++;
 	}
-	out[len] = '\0';
-	return (out);
+	return (res[len] = '\0', res);
 }
 
-static char	*trim_storage(char *old_storage)
+static char	*clean_buffer(char *buffer)
 {
-	char	*newline_loc;
-	char	*new_storage;
+	char	*newline_addr;
+	char	*res;
 
-	if (!old_storage)
+	if (!buffer)
 		return (NULL);
-	newline_loc = ft_strchr(old_storage, '\n');
-	if (!newline_loc || *(newline_loc + 1) == '\0')
-	{
-		free(old_storage);
-		return (NULL);
-	}
-	new_storage = ft_strdup_gnl(newline_loc + 1);
-	free(old_storage);
-	return (new_storage);
+	newline_addr = ft_strchr(buffer, '\n');
+	if (!newline_addr || *(newline_addr + 1) == '\0')
+		return (free(buffer), NULL);
+	res = ft_strdup(newline_addr + 1);
+	return (free(buffer), res);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*storage[OPEN_MAX];
+	static char	*buffer[OPEN_MAX];
 	char		*line;
 
 	if (fd < 0 || fd >= OPEN_MAX || BUFFER_SIZE <= 0)
 		return (NULL);
-	storage[fd] = fill_storage(fd, storage[fd]);
-	if (!storage[fd] || storage[fd][0] == '\0')
+	buffer[fd] = read_line(fd, buffer[fd]);
+	if (!buffer[fd] || buffer[fd][0] == '\0')
 	{
-		free(storage[fd]);
-		storage[fd] = NULL;
+		free(buffer[fd]);
+		buffer[fd] = NULL;
 		return (NULL);
 	}
-	line = extract_line(storage[fd]);
+	line = extract_line(buffer[fd]);
 	if (!line)
 	{
-		free(storage[fd]);
-		storage[fd] = NULL;
+		free(buffer[fd]);
+		buffer[fd] = NULL;
 		return (NULL);
 	}
-	storage[fd] = trim_storage(storage[fd]);
+	buffer[fd] = clean_buffer(buffer[fd]);
 	return (line);
 }

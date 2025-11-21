@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.h                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mosakura <mosakura@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: mvrm <mvrm@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/18 15:49:08 by mosakura          #+#    #+#             */
-/*   Updated: 2025/11/20 17:22:44 by mosakura         ###   ########.fr       */
+/*   Updated: 2025/11/21 15:54:13 by mvrm             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,26 @@
 # define GET_NEXT_LINE_H
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 42
+#  define BUFFER_SIZE 256
 # endif
 
-# include <limits.h>
 # include <stddef.h>
-# include <stdlib.h>
 # include <unistd.h>
-# include <fcntl.h> //O_RDWR
+# include <stdlib.h>
+# include <limits.h>
+# ifndef OPEN_MAX
+#  define OPEN_MAX 1024
+# endif
 
-char		*get_next_line(int fd);
-ssize_t		get_newline(char *str);
-char		*ft_strjoin(char *s1, char *s2);
-char		*ft_substr(const char *s, size_t start, size_t len);
-size_t		ft_strlen(const char *s);
-char		*ft_strdup(const char *s);
+char	*strjoin_and_free(char *s1_old, char *s2);
+char	*ft_strdup_gnl(const char *src);
+char	*ft_strjoin(char const *s1, char const *s2);
+char	*ft_strchr(const char *str, int c);
+char	*read_core(int fd, char *save, char *buf);
+char	*read_letter(int fd, char *save);
+char	*extraction_line(char *save);
+char	*free_save(char *save_old);
+char	*get_next_line(int fd);
+size_t	ft_strlen(const char *s);
 
 #endif
